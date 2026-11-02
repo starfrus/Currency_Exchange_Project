@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter.ttk import Combobox
 from tkinter import messagebox
+import tkinter as tk
 
 import requests
 
@@ -19,6 +20,26 @@ CURRENCY = {
 }
 
 CURRENCY_LIST_KEYS = list(CURRENCY.keys())
+
+def show_rate_result(rate1, base1_name, rate2, base2_name, target_name):
+    win = tk.Toplevel(root)
+    win.title("Курс обмена")
+    win.resizable(False, False)
+    win.transient(root)
+    win.grab_set()
+
+    txt = tk.Text(win, wrap="word", borderwidth=0, highlightthickness=0,
+                  width=20, height=3, font="Arial 20 bold")
+    txt.pack()
+
+    txt.insert("end", f"1 {base1_name} = {rate1:.2f} {target_name}\n")
+    txt.insert("end", f"1 {base2_name} = {rate2:.2f} {target_name}\n")
+
+    txt.config(state="disabled")
+
+    btn = tk.Button(win, text="OK", width=10, command=win.destroy)
+    btn.pack(pady=(0, 15))
+    win.wait_window()
 
 def config_translate(var, label):
     label.config(text=CURRENCY[var.get()])
@@ -41,7 +62,6 @@ def exchange():
         response1 = requests.get(f'https://open.er-api.com/v6/latest/{base1}')
         response1.raise_for_status()
         data1 = response1.json()
-
         # Запрос для второй базовой валюты
         response2 = requests.get(f'https://open.er-api.com/v6/latest/{base2}')
         response2.raise_for_status()
@@ -54,16 +74,11 @@ def exchange():
         rate1 = data1['rates'][target]
         rate2 = data2['rates'][target]
 
-        base1_name = CURRENCY[base1]
-        base2_name = CURRENCY[base2]
-        target_name = CURRENCY[target]
+        base1_name = base1_combobox.get()
+        base2_name = base2_combobox.get()
+        target_name = target_combobox.get()
 
-        messagebox.showinfo(
-            "Курс обмена",
-            f"Курс {rate1:.2f} {target_name} за 1 {base1_name}\n"
-            ""
-            f"Курс {rate2:.2f} {target_name} за 1 {base2_name}"
-        )
+        show_rate_result(rate1, base1_name, rate2, base2_name, target_name)
     except Exception as e:
         messagebox.showerror("Ошибка", f"Ошибка: {e}")
 
@@ -93,11 +108,11 @@ base1_combobox = Combobox(
     state="readonly",
     textvariable=base1_var,
 )
-base1_combobox.bind("<<ComboboxSelected>>", lambda e: config_translate(base1_var, base1_translate_label))
+base1_combobox.bind("<<ComboboxSelected>>", lambda e: config_translate(base1_var, base1_label))
 base1_combobox.pack(pady=PAD_Y_COMBO)
 
-base1_translate_label = Label(text="")
-base1_translate_label.pack(pady=PAD_Y_TRANSLATE)
+base1_label = Label(text="")
+base1_label.pack(pady=PAD_Y_TRANSLATE)
 
 # Вторая базовая валюта
 Label(text="Вторая базовая валюта").pack(pady=PAD_Y_LABEL)
@@ -109,11 +124,11 @@ base2_combobox = Combobox(
     state="readonly",
     textvariable=base2_var,
 )
-base2_combobox.bind("<<ComboboxSelected>>", lambda e: config_translate(base2_var, base2_translate_label))
+base2_combobox.bind("<<ComboboxSelected>>", lambda e: config_translate(base2_var, base2_label))
 base2_combobox.pack(pady=PAD_Y_COMBO)
 
-base2_translate_label = Label(text="")
-base2_translate_label.pack(pady=PAD_Y_TRANSLATE)
+base2_label = Label(text="")
+base2_label.pack(pady=PAD_Y_TRANSLATE)
 
 # Целевая валюта
 Label(text="Целевая валюта").pack(pady=PAD_Y_LABEL)
@@ -125,14 +140,14 @@ target_combobox = Combobox(
     state="readonly",
     textvariable=target_var,
 )
-target_combobox.bind("<<ComboboxSelected>>", lambda e: config_translate(target_var, target_translate_label))
+target_combobox.bind("<<ComboboxSelected>>", lambda e: config_translate(target_var, target_label))
 target_combobox.pack(pady=PAD_Y_COMBO)
 
-target_translate_label = Label(text="")
-target_translate_label.pack(pady=PAD_Y_TRANSLATE)
+target_label = Label(text="")
+target_label.pack(pady=PAD_Y_TRANSLATE)
 
-# Кнопка
-start_btn = Button(text="Получить курс обмена", command=exchange)
-start_btn.pack(pady=15)
+
+btn = Button(text="Получить курс обмена", bg="green",command=exchange)
+btn.pack()
 
 root.mainloop()
